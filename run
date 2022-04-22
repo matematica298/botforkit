@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+cd `dirname "$0"`
+
+SCRIPT_FILE=$1
+SCRIPT_FILE=${SCRIPT_FILE/://}
+SCRIPT_FILE="./scripts/${SCRIPT_FILE}.sh"
+
+if ! [[ -f $SCRIPT_FILE ]]; then
+    echo "ERROR: не найден скрипт $1"
+    exit 1
+fi
+
+ARGS=("$@")
+unset ARGS[0]
+
+SCRIPT="${SCRIPT_FILE} ${ARGS[@]}"
+${SCRIPT}

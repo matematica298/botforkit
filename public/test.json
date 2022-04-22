@@ -1,0 +1,19 @@
+{
+    "type": "message_new",
+    "object": {
+        "date": 1602693384,
+        "from_id": 172383889,
+        "id": 68741,
+        "out": 0,
+        "peer_id": 172383889,
+        "text": "расписание 294",
+        "conversation_message_id": 239,
+        "fwd_messages": [],
+        "important": false,
+        "random_id": 0,
+        "attachments": [],
+        "is_hidden": false
+    },
+    "group_id": 154881917,
+    "event_id": "e913f86403cc6a27bf6128bfcf9921c3da8571bd"
+}

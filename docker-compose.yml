@@ -1,0 +1,77 @@
+version: '3'
+
+services:
+  nginx:
+    image: nginx:1.17.0-alpine
+    restart: always
+    volumes:
+      - .:/var/www/html:${DOCKER_VOLUME_FLAG}
+      - ./docker/nginx/conf.d/:/etc/nginx/conf.d/:${DOCKER_VOLUME_FLAG}
+      - ./docker/nginx/logs:/var/log/nginx/:${DOCKER_VOLUME_FLAG}
+    networks:
+      - traefik
+      - default
+    expose:
+      - "9000"
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=${TRAEFIK_NETWORK}
+      - traefik.basic.frontend.rule=Host:${APP_DOMAIN}
+      - traefik.basic.port=80
+      - traefik.basic.protocol=http
+    links:
+      - php
+
+  php: &php
+    user: ${APP_UID}:${APP_GID}
+    build: ./docker/php
+    restart: always
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html:${DOCKER_VOLUME_FLAG}
+    command: 'php-fpm'
+    expose:
+      - 9000
+
+  db:
+    image: mariadb:10.3.13
+    restart: always
+    volumes:
+      - ./docker/databases:/var/lib/mysql:${DOCKER_VOLUME_FLAG}
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_DATABASE}
+
+  queue:
+    <<: *php
+    command: 'php artisan queue:work --tries=3'
+    expose: []
+
+  composer:
+    user: ${APP_UID}:${APP_GID}
+    image: composer:1.9.0
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html:${DOCKER_VOLUME_FLAG}
+    command: 'composer install --no-dev --ignore-platform-reqs --no-scripts'
+
+  node:
+    image: node:10.16.3-alpine
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html:${DOCKER_VOLUME_FLAG}
+      - ./docker/node/.npm:/.npm
+    command: sh -c 'npm i && npm run prod'
+
+  redis:
+    image: redis:5.0.5-alpine
+    restart: always
+    volumes:
+      - ./docker/databases/redis:/data:${DOCKER_VOLUME_FLAG}
+
+networks:
+  traefik:
+    external:
+      name: ${TRAEFIK_NETWORK}
